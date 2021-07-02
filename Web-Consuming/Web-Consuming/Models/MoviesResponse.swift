@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct PopularMoviesResponse: Codable {
+struct MoviesResponse: Codable {
     var page: Int
     var results: [Movie]
     var total_results: Int

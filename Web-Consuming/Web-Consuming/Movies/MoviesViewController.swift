@@ -13,6 +13,8 @@ class MoviesViewController: UIViewController, UITableViewDelegate, UITableViewDa
     
     let searchController = UISearchController()
     var popMovies: [Movie] = []
+    var nowPlayingMovies: [Movie] = []
+    var moviesImages: [Int: UIImage] = [:]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,11 +35,62 @@ class MoviesViewController: UIViewController, UITableViewDelegate, UITableViewDa
     func loadMovies() {
         Requester.request(apiRouter: MovieDBAPIRouter.getPopular(page: 1)) { data in
             guard let data = data else { return }
-            guard let popularMoviesResponse = Parser<PopularMoviesResponse>().parse(data: data) else { return }
+            guard let popularMoviesResponse = Parser<MoviesResponse>().parse(data: data) else { return }
             
-            self.popMovies = popularMoviesResponse.results
-            DispatchQueue.main.async {
-                self.tableView.reloadData()
+            let downloadedMoviesNumber = popularMoviesResponse.results.count
+            
+            popularMoviesResponse.results.forEach { movie in
+                if let posterPath = movie.poster_path {
+                    Requester.request(apiRouter: .getImage(poster_path: posterPath)) { imageData in
+                        self.popMovies.append(movie)
+                        if let imageData = imageData {
+                            self.moviesImages[movie.id] = UIImage(data: imageData)
+                        }
+                        if self.popMovies.count == downloadedMoviesNumber {
+                            DispatchQueue.main.async {
+                                self.tableView.reloadData()
+                            }
+                        }
+                    }
+                }
+                else {
+                    self.popMovies.append(movie)
+                    if self.popMovies.count == downloadedMoviesNumber {
+                        DispatchQueue.main.async {
+                            self.tableView.reloadData()
+                        }
+                    }
+                }
+            }
+        }
+        Requester.request(apiRouter: .getNowPlaying(page: 1)) { data in
+            guard let data = data else { return }
+            guard let nowPlayingResponse = Parser<MoviesResponse>().parse(data: data) else { return }
+            
+            let downloadedMoviesNumber = nowPlayingResponse.results.count
+            
+            nowPlayingResponse.results.forEach { movie in
+                if let posterPath = movie.poster_path {
+                    Requester.request(apiRouter: .getImage(poster_path: posterPath)) { imageData in
+                        self.nowPlayingMovies.append(movie)
+                        if let imageData = imageData {
+                            self.moviesImages[movie.id] = UIImage(data: imageData)
+                        }
+                        if self.nowPlayingMovies.count == downloadedMoviesNumber {
+                            DispatchQueue.main.async {
+                                self.tableView.reloadData()
+                            }
+                        }
+                    }
+                }
+                else {
+                    self.nowPlayingMovies.append(movie)
+                    if self.nowPlayingMovies.count == downloadedMoviesNumber {
+                        DispatchQueue.main.async {
+                            self.tableView.reloadData()
+                        }
+                    }
+                }
             }
         }
     }
@@ -48,7 +101,11 @@ class MoviesViewController: UIViewController, UITableViewDelegate, UITableViewDa
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        popMovies.count
+        if section == 0 {
+            return popMovies.count
+        } else {
+            return nowPlayingMovies.count
+        }
     }
     
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
@@ -64,23 +121,12 @@ class MoviesViewController: UIViewController, UITableViewDelegate, UITableViewDa
             return UITableViewCell()
         }
         
-        if indexPath.section == 0 {
-            cell.movieTitle.text = popMovies[indexPath.row].title
-            cell.moviewShortDescription.text = popMovies[indexPath.row].overview
-            cell.movieRanking.text = popMovies[indexPath.row].vote_average.description
-//            if let imageURL = URL(string: popMovies[indexPath.row].poster_path ?? "") {
-//                if let imageData = try? Data(contentsOf: imageURL) {
-//                    cell.movieImage.image = UIImage(data: imageData)
-//                }
-//            }
-            Requester.request(apiRouter: MovieDBAPIRouter.getImage(poster_path: popMovies[indexPath.row].poster_path ?? "")) { imageData in
-                if let imageData = imageData {
-                    DispatchQueue.main.async {
-                        cell.movieImage.image = UIImage(data: imageData)
-                    }
-                }
-            }
-        }
+        let movie = indexPath.section == 0 ? popMovies[indexPath.row] : nowPlayingMovies[indexPath.row]
+        
+        cell.movieTitle.text = movie.title
+        cell.moviewShortDescription.text = movie.overview
+        cell.movieRanking.text = movie.vote_average.description
+        cell.movieImage.image = moviesImages[movie.id]
         return cell
     }
     
@@ -90,9 +136,13 @@ class MoviesViewController: UIViewController, UITableViewDelegate, UITableViewDa
     
     
     // MARK: - Segue
-//    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-//        if let vC = segue.destination as? MovieDetailsViewController {
-//
-//        }
-//    }
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let vC = segue.destination as? MovieDetailsViewController {
+            if let indexPath = sender as? IndexPath {
+                let movie = indexPath.section == 0 ? popMovies[indexPath.row] : nowPlayingMovies[indexPath.row]
+                vC.movie = movie
+                vC.movieImage = moviesImages[movie.id]
+            }
+        }
+    }
 }

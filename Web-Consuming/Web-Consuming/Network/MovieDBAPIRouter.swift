@@ -7,25 +7,11 @@
 
 import Foundation
 
-protocol APIRouterProtocol {
-    var requestType: RequestType { get }
-    var baseURL: String { get }
-    var apiKey: String { get }
-    var path: String { get }
-}
-
-enum MovieDBAPIRouter: APIRouterProtocol {
+enum MovieDBAPIRouter {
     case getPopular(page: Int)
+    case getNowPlaying(page: Int)
     case getImage(poster_path: String)
-    
-    var requestType: RequestType {
-        switch self {
-        case .getPopular:
-            return .get
-        case .getImage:
-            return .get
-        }
-    }
+    case getDetails(movieId: Int)
     
     var baseURL: String {
         switch self {
@@ -33,6 +19,10 @@ enum MovieDBAPIRouter: APIRouterProtocol {
             return "https://api.themoviedb.org/3"
         case .getImage:
             return "https://image.tmdb.org/t/p/original"
+        case .getNowPlaying:
+            return "https://api.themoviedb.org/3"
+        case .getDetails:
+            return "https://api.themoviedb.org/3"
         }
     }
     
@@ -46,12 +36,10 @@ enum MovieDBAPIRouter: APIRouterProtocol {
             return "\(baseURL)/movie/popular?api_key=\(apiKey)&page=\(page)"
         case .getImage(poster_path: let poster_path):
             return "\(baseURL)\(poster_path)"
+        case .getNowPlaying(page: let page):
+            return "\(baseURL)/movie/now_playing?api_key=\(apiKey)&page=\(page)"
+        case .getDetails(movieId: let movieId):
+            return "\(baseURL)/movie/\(movieId)?api_key=\(apiKey)"
         }
     }
-}
-
-enum RequestType: String {
-    case get = "GET"
-    case post = "POST"
-    case delete = "DELETE"
 }

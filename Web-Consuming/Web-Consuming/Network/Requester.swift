@@ -8,7 +8,7 @@
 import Foundation
 
 class Requester {
-    static func request(apiRouter: APIRouterProtocol, completionHandler: @escaping (Data?) -> Void) {
+    static func request(apiRouter: MovieDBAPIRouter, completionHandler: @escaping (Data?) -> Void) {
         guard let url = URL(string: apiRouter.path) else {
             completionHandler(nil)
             return

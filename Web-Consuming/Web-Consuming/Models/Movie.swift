@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 struct Movie: Codable {
     var poster_path: String?
