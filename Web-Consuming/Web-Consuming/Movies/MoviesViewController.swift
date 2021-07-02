@@ -9,6 +9,7 @@ import UIKit
 
 class MoviesViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
 
+    @IBOutlet weak var backgroundView: UIView!
     @IBOutlet weak var tableView: UITableView!
     
     let searchController = UISearchController()
@@ -22,11 +23,10 @@ class MoviesViewController: UIViewController, UITableViewDelegate, UITableViewDa
         tableView.dataSource = self
         
         // MARK: - Search Bar on Navigation Bar
-        self.searchController.hidesNavigationBarDuringPresentation = false
-        self.searchController.searchBar.searchBarStyle = UISearchBar.Style.minimal
-        self.navigationItem.titleView = self.searchController.searchBar
-        self.definesPresentationContext = true
-        // fix searchBar position and create a placeholder
+        
+        navigationItem.searchController = UISearchController(searchResultsController: nil)
+        navigationItem.hidesSearchBarWhenScrolling = false
+        navigationItem.largeTitleDisplayMode = .always
         
         loadMovies()
         
@@ -48,6 +48,7 @@ class MoviesViewController: UIViewController, UITableViewDelegate, UITableViewDa
                         }
                         if self.popMovies.count == downloadedMoviesNumber {
                             DispatchQueue.main.async {
+                                self.backgroundView.isHidden = true
                                 self.tableView.reloadData()
                             }
                         }
@@ -57,6 +58,7 @@ class MoviesViewController: UIViewController, UITableViewDelegate, UITableViewDa
                     self.popMovies.append(movie)
                     if self.popMovies.count == downloadedMoviesNumber {
                         DispatchQueue.main.async {
+                            self.backgroundView.isHidden = true
                             self.tableView.reloadData()
                         }
                     }
@@ -78,6 +80,7 @@ class MoviesViewController: UIViewController, UITableViewDelegate, UITableViewDa
                         }
                         if self.nowPlayingMovies.count == downloadedMoviesNumber {
                             DispatchQueue.main.async {
+                                self.backgroundView.isHidden = true
                                 self.tableView.reloadData()
                             }
                         }
@@ -87,6 +90,7 @@ class MoviesViewController: UIViewController, UITableViewDelegate, UITableViewDa
                     self.nowPlayingMovies.append(movie)
                     if self.nowPlayingMovies.count == downloadedMoviesNumber {
                         DispatchQueue.main.async {
+                            self.backgroundView.isHidden = true
                             self.tableView.reloadData()
                         }
                     }
